@@ -1,5 +1,4 @@
-﻿using Orchard.DependencyInjection;
-using System;
+﻿using System;
 
 namespace Orchard.DisplayManagement
 {

@@ -13,6 +13,7 @@ using Orchard.Environment.Extensions.Features;
 using Orchard.Environment.Extensions.Loaders;
 using Orchard.Environment.Extensions.Utility;
 using System.Threading;
+using Orchard.Environment.Extensions.Features.Attributes;
 
 namespace Orchard.Environment.Extensions
 {

@@ -228,15 +228,8 @@ namespace Orchard.ContentManagement
 
             if (previous != null)
             {
-                if (!versionable)
-                {
-                    _session.Delete(previous);
-                }
-                else
-                {
-                    _session.Save(previous);
-                    previous.Published = false;
-                }
+                _session.Save(previous);
+                previous.Published = false;
             }
 
             contentItem.Published = true;
@@ -244,6 +237,11 @@ namespace Orchard.ContentManagement
             _session.Save(contentItem);
 
             Handlers.Reverse().Invoke(handler => handler.Published(context), _logger);
+
+            if (previous != null && !versionable)
+            {
+                _session.Delete(previous);
+            }
         }
 
         public async Task UnpublishAsync(ContentItem contentItem)

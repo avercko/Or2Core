@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
 using Orchard.ContentManagement.Handlers;
 using Orchard.ContentManagement.Metadata.Builders;
 using Orchard.ContentManagement.MetaData;
@@ -145,7 +146,7 @@ namespace Orchard.ContentManagement
             {
                 // If the published version is requested and is already loaded, we can
                 // return it right away
-                if(_contentManagerSession.RecallPublishedItemId(contentItemId, out contentItem))
+                if (_contentManagerSession.RecallPublishedItemId(contentItemId, out contentItem))
                 {
                     return contentItem;
                 }
@@ -201,7 +202,7 @@ namespace Orchard.ContentManagement
             return contentItem;
         }
 
-        public async Task PublishAsync(ContentItem contentItem, bool versionable = true)
+        public async Task PublishAsync(ContentItem contentItem)
         {
             if (contentItem.Published)
             {
@@ -237,11 +238,6 @@ namespace Orchard.ContentManagement
             _session.Save(contentItem);
 
             Handlers.Reverse().Invoke(handler => handler.Published(context), _logger);
-
-            if (previous != null && !versionable)
-            {
-                _session.Delete(previous);
-            }
         }
 
         public async Task UnpublishAsync(ContentItem contentItem)
@@ -281,7 +277,7 @@ namespace Orchard.ContentManagement
             Handlers.Invoke(handler => handler.Unpublishing(context), _logger);
 
             publishedItem.Published = false;
-            
+
             _session.Save(publishedItem);
 
             Handlers.Reverse().Invoke(handler => handler.Unpublished(context), _logger);
@@ -318,7 +314,7 @@ namespace Orchard.ContentManagement
 
             buildingContentItem.ContentItemId = existingContentItem.ContentItemId;
             buildingContentItem.Latest = true;
-            buildingContentItem.Data = existingContentItem.Data;
+            buildingContentItem.Data = new JObject(existingContentItem.Data);
 
             var context = new VersionContentContext(existingContentItem, buildingContentItem);
 
@@ -426,6 +422,14 @@ namespace Orchard.ContentManagement
             _session.Save(contentItem);
 
             Handlers.Reverse().Invoke(handler => handler.Removed(context), _logger);
+
+            var publishedItem = GetAsync(contentItem.ContentItemId, VersionOptions.Published).GetAwaiter().GetResult();
+
+            if (publishedItem != null)
+            {
+                publishedItem.Latest = true;
+                _session.Save(publishedItem);
+            }
 
             return Task.CompletedTask;
         }
